@@ -3,6 +3,8 @@ from tokenize import group
 from numpy import *
 #导入操作符模块
 import operator
+import matplotlib
+import matplotlib.pyplot as plt
 
 def createDataSet():
     group = array([[1.0,1.1],[1.0,1.0],[0,0],[0,0.1]])
@@ -27,14 +29,20 @@ def classify0(inX, dataSet, labels, k):
     key=operator.itemgetter(1), reverse = True)
     return sortedClassCount[0][0]
 
+
+#将N行4列文件的前三列转换为N行3列的矩阵，最后一列转换为标签字典
 def file2matrix(filename):
     fr = open(filename)
+    #读取文件，并返回行数
     arrayOfLines = fr.readlines()
     numberOfLines = len(arrayOfLines)
+    #创建文件行数*3的空矩阵，此处的3需要根据需求变动
     returnMat = zeros((numberOfLines,3))
     classLabelVector = []
     index = 0
+    #循环将文件内容写入矩阵中
     for line in arrayOfLines:
+        #删除每一行中头尾的空格
         line  = line.strip()
         listFromLIne = line.split("\t")
         returnMat[index,:] = listFromLIne[0:3]
@@ -42,3 +50,9 @@ def file2matrix(filename):
         index += 1
     return returnMat,classLabelVector 
 
+
+datingDataMat,datingLabels = file2matrix("D:/hst/MLStudy/MLStudy/knn/datingTestSet.txt")
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.scatter(datingDataMat[:,1],datingDataMat[:,2],15.0*array(datingLabels),15.0*array(datingLabels))
+plt.show()
