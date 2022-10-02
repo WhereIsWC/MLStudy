@@ -17,4 +17,29 @@ def createPlot():
     plotNode('a leaf node',(0.8,0.1),(0.3,0.8),leafNode)
     plt.show()
 
+#获取叶节点的数目
+def getNumLeafs(myTree):
+    numLeafs = 0
+    firstStr = myTree.keys()[0]
+    secondDict = myTree[firstStr]
+    for key in secondDict.keys():
+        if type(secondDict[key]).__name__=="dict":
+            numLeafs += getNumLeafs(secondDict[key])
+        else:
+            numLeafs +=1
+    return numLeafs
+
+#获取树的层数
+def getTreeDepth(myTree):
+    maxDepth = 0
+    firstStr = myTree.keys()[0]
+    secondDict = myTree[firstStr]
+    for key in secondDict.keys():
+        if type(secondDict[key]).__name__ == "dict":
+            thisDepth = 1 + getTreeDepth(secondDict[key])
+        else:
+            thisDepth = 1
+        if thisDepth > maxDepth:
+            maxDepth = thisDepth
+    return maxDepth
 createPlot()
