@@ -1,6 +1,8 @@
 from cProfile import label
 from tokenize import group
 from numpy import *
+from os import listdir
+from PIL import Image
 #导入操作符模块
 import operator
 import matplotlib
@@ -46,7 +48,7 @@ def file2matrix(filename):
     for line in arrayOfLines:
         #删除每一行中头尾的空格
         line  = line.strip()
-        listFromLIne = line.split("\t")
+        listFromLIne = line.split("/t")
         returnMat[index,:] = listFromLIne[0:3]
         classLabelVector.append(int(listFromLIne[-1]))
         index += 1
@@ -93,7 +95,7 @@ def classifyPerson():
     classifierResult = classify0((inArr-minVals)/ranges,normMat,datingLabels,3)
     print("You will probably like this person: ",resultList[classifierResult-1])
 
-classifyPerson()
+#classifyPerson()
 """
 #画散点图展示数据部分
 fig = plt.figure()
@@ -103,3 +105,95 @@ ax.set_xlabel("I am x")
 ax.set_ylabel("I am y")
 plt.show()
 """
+
+#以下是手写数字识别部分
+
+
+#将2进制（32*32）存储的图片转换为矩阵（1*1024）
+#其中的32是图片的总行数和列数，实际应用中要么图片适应代码，要么修改代码
+def img2vector(filename):
+    returnVect = zeros((1,1024))
+    fr = open(filename)
+    for i  in range(32):
+        lineStr = fr.readline()
+        for j in range(32):
+            returnVect[0,32*i+j] = int(lineStr[j])
+    return returnVect
+
+def arr2vector(arrUnder2):
+    returnVect = zeros((1,1024))
+    for i  in range(32):
+        for j in range(32):
+            returnVect[0,32*i+j] = int(arrUnder2[i,j])
+    return returnVect
+
+def handWritingClassTest():
+    hwLabels = []
+    # 获取训练数据目录下的文件名称
+    trainingFileList = listdir("kNN/trainingDigits")
+    m = len(trainingFileList)
+    trainingMat = zeros((m,1024))
+    #生成训练集及其标签
+    for i in range(m):
+        fileNameStr = trainingFileList[i]
+        #获取不带.txt的文件名
+        fileStr = fileNameStr.split(".")[0]
+        #获取_前的文本并强制转换为数字形式，这是因为我们在处理文件时使用了对应"答案_序号.txt"的命名规则
+        classNumStr = int(fileStr.split("_")[0])
+        hwLabels.append(classNumStr)
+        trainingMat[i,:] = img2vector("knn/trainingDigits/%s" % fileNameStr)
+    testFileList = listdir("knn/testDigits")
+    errorCount = 0
+    mTest = len(testFileList)
+    for i in range(mTest):
+        fileNameStr = testFileList[i]
+        fileStr = fileNameStr.split(".")[0]
+        classNumStr = int (fileStr.split("_")[0])
+        vectorUnderTest  = img2vector("knn/testDigits/%s" % fileNameStr)
+        classifierResult = classify0(vectorUnderTest, trainingMat, hwLabels , 3)
+        print("分类器返回%d,正确答案为%d" % (classifierResult,classNumStr))
+        if(classifierResult!=classNumStr): errorCount += 1
+    print("总测试样本为%d,错误个数为%d,错误率为%f" %(mTest,errorCount,errorCount/mTest))   
+
+#将传入的图片转换为0,1的32*32的数组    
+def pic2Array(fileName):
+    img = Image.open(fileName)
+    img = img.resize((32,32))
+    #转换为灰度图片
+    img = img.convert("L")
+    img_new = img.point(lambda x:0 if x>170 else 1)
+    returnArr = array(img_new)
+    """
+    with open("d:/test.txt") as f:
+        for i in range(32):
+            for j in range(32):
+                f.write(str(returnArr[i,j]))
+            f.write("\n")    
+    """
+    return returnArr
+
+#自己手写图片识别测试，算法问题不大，主要问题在于图片转换成0,1矩阵过程中失真严重，导致识别错误。后期再来优化
+def handWritingClassTest1(fileName):
+    hwLabels = []
+    # 获取训练数据目录下的文件名称
+    trainingFileList = listdir("kNN/trainingDigits")
+    m = len(trainingFileList)
+    trainingMat = zeros((m,1024))
+    #生成训练集及其标签
+    for i in range(m):
+        fileNameStr = trainingFileList[i]
+        #获取不带.txt的文件名
+        fileStr = fileNameStr.split(".")[0]
+        #获取_前的文本并强制转换为数字形式，这是因为我们在处理文件时使用了对应"答案_序号.txt"的命名规则
+        classNumStr = int(fileStr.split("_")[0])
+        hwLabels.append(classNumStr)
+        trainingMat[i,:] = img2vector("knn/trainingDigits/%s" % fileNameStr)
+
+
+    arrayUnderTest = pic2Array(fileName)
+
+    vectorUnderTest  = arr2vector(arrayUnderTest)
+    classifierResult = classify0(vectorUnderTest, trainingMat, hwLabels , 3)
+    print("分类器返回%d" % classifierResult)
+
+handWritingClassTest1("d:/6.png")
