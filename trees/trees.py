@@ -39,7 +39,7 @@ def splitDataSet(dataSet, axis, value):
     return retDataSet
 
 
-#选择最好的数据集划分方式
+#选择最好的数据集划分方式,基本思想，遍历每一个分组方案，计算按期分组后的熵，选最小那个为最优方案
 def chooseBestFeatureToSplit(dataSet):
     #因为最后一列是标签列，所以-1
     numFeatures = len(dataSet[0])- 1
@@ -72,12 +72,14 @@ def majorityCnt(classList):
 #创建数树
 def createTree(dataSet, labels):
     classList = [example[-1] for example in dataSet]
+    #这两个if是递归的调用的终止条件
     #类别完全相同则停止继续划分
     if classList.count(classList[0]) == len(classList):
         return classList[0]
     #当遍历完，即只有一组数据时
     if len(dataSet[0]) == 1:
         return  majorityCnt(classList)
+        
     bestFeat = chooseBestFeatureToSplit(dataSet)
     bestFeatLabel = labels[bestFeat]
     myTree = {bestFeatLabel:{}}
@@ -106,26 +108,22 @@ def classify(inputTree, featLabels, testVec):
                 classLabel = secondDict[key]
     return classLabel
 
-
+#将树转换成二进制存储，方便调用
 def storeTree(inputTree, fileName):
     import pickle
     fw = open(fileName,"wb")
     pickle.dump(inputTree,fw)
     fw.close
-
+#调用二进制存储的树
 def grabTree(fileName):
     import pickle
     fr = open(fileName,"rb")
     return pickle.load(fr)
 
-
-
-
-myDat,labels = createDate()
-featLabels = list(labels)
-myTree = createTree(myDat, labels)
-print(myTree)
-print(classify(myTree,featLabels,[1,0]))
-print(classify(myTree,featLabels,[1,1]))
-storeTree(myTree,"StoreTreeTest.txt")
-print(grabTree("StoreTreeTest.txt"))
+fr = open("trees\lenses.txt")
+lenses= [inst.strip().split("\t") for inst in fr.readlines()]
+lensesLabels = ["age","prescript","astigmatic","tearRate"]
+lensesTree = createTree(lenses,lensesLabels)
+print(lensesTree)
+import treePlotter
+treePlotter.createPlot(lensesTree)
