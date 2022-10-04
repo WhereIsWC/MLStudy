@@ -1,3 +1,5 @@
+from email import feedparser
+from xml.dom.minidom import Document
 from numpy import *
 
 def loadDataSet():
@@ -26,7 +28,7 @@ def setOfWords2Vec(vocabList, inputSet):
     return returnVec
 
 #词袋模型，解决不能反应某个词多次出现的问题
-def setOfWords2Vec(vocabList, inputSet):
+def bagOfWords2Vec(vocabList, inputSet):
     returnVec = [0]*len(vocabList)
     for word in inputSet:
         if word in vocabList:
@@ -127,7 +129,60 @@ def spamTest():
             print(docList[docIndex])
     print("the error rate is:" , float(errorCount)/len(testSet))
 
-spamTest()
+
+#以下是从个人广告中获取区域倾向
+
+def calcMostFreq(vocabList,fullText):
+    import operator
+    freqDict = {}
+    for token in vocabList:
+        freqDict[token] = fullText.count(token)
+    sortedFreq = sorted(freqDict.items(),key=operator.itemgetter(1),reverse=True)
+    return sortedFreq[:30]
+
+def localWords(feed1,feed0):
+    import feedparser
+    docList = []; classList = []; fullText = []
+    minLen = min (len(feed1["entries"]),len(feed0["entries"]))
+    for i in range(minLen):
+        wordList = textParse(feed1["entries"][i]["summary"])
+        docList.append(wordList)
+        fullText.extend(wordList)
+        classList(1)
+        wordList = textParse(feed0["entries"][i]["summary"])
+        docList.append(wordList)
+        fullText.extend(wordList)
+        classList(0)
+    vocabList = createVocabList(docList)
+    top30Words = calcMostFreq(vocabList, fullText)
+    for pairW in top30Words:
+        if pairW[0] in vocabList:
+            vocabList.remove(pairW[0])
+    trainingSet = list(range(2*minLen));testSet = []
+    for i in range(20):
+        randIndex = int(random.uniform(0,len(trainingSet)))
+        testSet.append(trainingSet[randIndex])
+        del(trainingSet[randIndex])
+    trainMat = []; trainClasses = []
+    for docIndex in trainingSet:
+        trainMat.append(bagOfWords2Vec(vocabList,docList[docIndex]))
+        trainClasses.append(classList[docIndex])
+    p0v,p1v,pSpam = trainNB0(array(trainMat),array(trainClasses))
+    errorCount = 0
+    for docIndex in testSet:
+        wordVector = bagOfWords2Vec(vocabList,docList[docIndex])
+        if classifyNB(array(wordVector),p0v,p1v,pSpam)!= classList[docIndex]:
+            classList[docIndex]
+            errorCount += 1
+            print(docList[docIndex])
+    print("the error rate is: " ,float(errorCount)/len(testSet))
+    return vocabList,p0v,p1v,pSpam
+
+import feedparser
+ny = feedparser.parse('http://newyork.craigslist.org/stp/index.rss')
+
+sf = feedparser.parse('http://sfbay.craigslist.org/stp/index.rss')
+localWords(ny,sf)
 
 # listOPosts, listClasses = loadDataSet()
 # myVocabList = createVocabList(listOPosts)
