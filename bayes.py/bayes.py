@@ -81,8 +81,45 @@ def testingNB():
     testEntry = ["stupid","garbage"]
     thisDoc = array(setOfWords2Vec(myVocabList,testEntry))
     print(testEntry,"classified as: " ,classifyNB(thisDoc,p0v,p1v,pAb))
- 
-testingNB()   
+
+# 将文本分割为词组成的列表，目前规则：剔除小于3位数的单词，并转换为小写 
+def textParse(bigString):
+    import re
+    listOfTokens = re.split(r"\W* ", bigString) #使用正则表达式分割语句
+    return [tok.lower() for tok in listOfTokens if len(tok)>2] #剔除小于3位数的词，并转换为小写
+
+def spamTest():
+    docList = []; classList = []; fullText = []
+    for i in range(1,26):
+        wordList = textParse(open("bayes.py/email/spam/%d.txt" % i).read())
+        docList.append(wordList)
+        fullText.extend(wordList)
+        classList.append(1)
+        wordList = textParse(open("bayes.py/email/ham/%d.txt" % i).read())
+        docList.append(wordList)
+        fullText.extend(wordList)
+        classList.append(0)
+    vocabList = createVocabList(docList)
+    trainingSet = list(range(50));testSet = []
+    # 随机取10个作为测试集，40个作为训练集
+    for i in range(10):
+        randIndex = int(random.uniform(0,len(trainingSet)))
+        testSet.append(trainingSet[randIndex])
+        del(trainingSet[randIndex])
+    trainMat = []; trainClasses = []
+    for docIndex in trainingSet:
+        trainMat.append(setOfWords2Vec(vocabList,docList[docIndex]))
+        trainClasses.append(classList[docIndex])
+    p0v,p1v,pSpam = trainNB0(array(trainMat),array(trainClasses))
+    errorCount = 0
+    for docIndex in testSet:
+        wordVector = setOfWords2Vec(vocabList, docList[docIndex])
+        if classifyNB(array(wordVector),p0v,p1v,pSpam) != classList[docIndex]:
+            errorCount += 1
+            print(docList[docIndex])
+    print("the error rate is:" , float(errorCount)/len(testSet))
+
+spamTest()
 
 # listOPosts, listClasses = loadDataSet()
 # myVocabList = createVocabList(listOPosts)
