@@ -82,12 +82,20 @@ def testingNB():
     thisDoc = array(setOfWords2Vec(myVocabList,testEntry))
     print(testEntry,"classified as: " ,classifyNB(thisDoc,p0v,p1v,pAb))
 
-# 将文本分割为词组成的列表，目前规则：剔除小于3位数的单词，并转换为小写 
+# 将文本分割为词组成的列表，目前规则：剔除小于3位数的单词，并转换为小写.实际使用还需要优化 
 def textParse(bigString):
     import re
     listOfTokens = re.split(r"\W* ", bigString) #使用正则表达式分割语句
     return [tok.lower() for tok in listOfTokens if len(tok)>2] #剔除小于3位数的词，并转换为小写
 
+#区分垃圾邮件测试
+"""
+1、读取50份邮件，垃圾邮件和正常邮件各25
+2、将文件内容处理成词列表textParse
+3、取40个邮件做训练集，10个做测试集
+4、使用训练集生成向量
+5、用测试集进行测试
+"""
 def spamTest():
     docList = []; classList = []; fullText = []
     for i in range(1,26):
