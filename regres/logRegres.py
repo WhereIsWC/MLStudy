@@ -30,7 +30,7 @@ def gradAscent(dataMatIn, classLabels):
         weights = weights +alpha * dataMatrix.transpose() * error
     return weights
 
-#随机梯度上升算法
+#随机梯度上升算法 numIter代表迭代次数
 def stocGradAscent0(dataMatrix, classLabels, numIter=150):
     m,n = shape(dataMatrix)
     weights = ones(n)
@@ -77,9 +77,51 @@ def plotBestFit(wei):
     a = 1 # 调试用，无意义
 
 
+#回归分类函数
+def classifyVector(inX, weights):
+    prob = sigmoid(sum(inX*weights))
+    if prob > 0.5:
+        return 1
+    else:
+        return 0
 
-dataArr, labelMat =loadDataSet()
-weights=stocGradAscent0(array(dataArr),labelMat,500)
-#weights=gradAscent(dataArr,labelMat)
 
-plotBestFit(weights)
+#测试函数
+def colicTest():
+    frTrain = open("regres/horseColicTraining.txt")
+    frTest = open("regres/horseColicTest.txt")
+    trainingSet = []; trainingLabels = []
+    for line in frTrain.readlines():
+        currLine = line.strip().split("\t")
+        lineArr = []
+        for i in range(21):
+            lineArr.append(float(currLine[i]))
+        trainingSet.append(lineArr)
+        trainingLabels.append(float(currLine[21]))
+    trainWeights = stocGradAscent0(array(trainingSet),trainingLabels,500)
+    errorCount = 0;numTestVec = 0
+    for line in frTest.readlines():
+        numTestVec += 1
+        currLine = line.strip().split("\t")
+        lineArr = []
+        for i in range(21):
+            lineArr.append(float(currLine[i]))
+        if int(classifyVector(array(lineArr),trainWeights)) != int(currLine[21]):
+            errorCount += 1
+    errorRate = (float(errorCount)/numTestVec)
+    print("the error rate of this test is: %f" % errorRate)
+    return errorRate
+
+def multTest():
+    numTests = 10; errorSum = 0
+    for k in range(numTests):
+        errorSum += colicTest()
+    print("after %d iterations the average error rate is: %f" % (numTests,errorSum/float(numTests)))
+
+multTest()
+
+# dataArr, labelMat =loadDataSet()
+# weights=stocGradAscent0(array(dataArr),labelMat)
+# #weights=gradAscent(dataArr,labelMat)
+
+# plotBestFit(weights)
