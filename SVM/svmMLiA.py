@@ -41,13 +41,15 @@ def smoSimple(dataMatIn, classLabels, C, toler, maxIter):
         for i in range(m):
             fXi = float(multiply(alphas,labelMat).T*(dataMatrix*dataMatrix[i,:].T)) +b
             Ei =fXi - float(labelMat[i])
+            # 判断alpha是否能够优化
             if((labelMat[i]*Ei < -toler) and (alphas[i]<C)) or ((labelMat[i]*Ei > toler)
             and (alphas[i]> 0 )):
-                j = selectJrand(i,m)
+                j = selectJrand(i,m) #随机选择第二个alpha
                 fXj = float(multiply(alphas,labelMat).T *(dataMatrix*dataMatrix[j,:].T))+b
                 Ej = fXj - float(labelMat[j])
                 alphaIold = alphas[i].copy()
                 alphaJold = alphas[j].copy()
+                # 保证alpha在0到C之间
                 if (labelMat[i] != labelMat[j]):
                     L = max(0,alphas[j] - alphas[i])
                     H = min(C,C+alphas[i] - alphas[j])
@@ -57,6 +59,7 @@ def smoSimple(dataMatIn, classLabels, C, toler, maxIter):
                 if L == H:
                     print("L==H")
                     continue
+                #eta是alpha[j]的最优修改量
                 eta =2 * dataMatrix[i,:]*dataMatrix[j,:].T - dataMatrix[i,:]*dataMatrix[i,:].T
                 - dataMatrix[j,:]*dataMatrix[j,:].T
                 if eta >= 0:
@@ -67,7 +70,7 @@ def smoSimple(dataMatIn, classLabels, C, toler, maxIter):
                 if(abs(alphas[j]- alphaJold) < 0.00001):
                     print("j not moving enough")
                     continue
-                alphas[i] += labelMat[j]*labelMat[i]*(alphaJold - alphas[j])
+                alphas[i] += labelMat[j]*labelMat[i]*(alphaJold - alphas[j]) #对i进行修改，修改量与j相同，方向相反
                 b1 = b -Ei -labelMat[i]*(alphas[i] - alphaIold)* dataMatrix[i,:]*dataMatrix[i,:].T 
                 - labelMat[j]*(alphas[j] - alphaJold) * dataMatrix[i,:]*dataMatrix[j,:].T
                 b2 = b - Ej - labelMat[i] * (alphas[i] - alphaIold) * dataMatrix[i,:]*dataMatrix[j,:].T  
@@ -93,3 +96,4 @@ dataArr, labelArr = loadDataSet("SVM/testSet.txt")
 b,alphas = smoSimple(dataArr,labelArr,0.6,0.001,40)
 print(b)
 print(alphas)
+#page102
